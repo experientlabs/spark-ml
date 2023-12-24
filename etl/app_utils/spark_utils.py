@@ -12,7 +12,7 @@ import sys
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StringType, StructField, IntegerType
 
-from src.app_utils.logging_utils import get_logger
+from etl.app_utils.logging_utils import get_logger
 
 logger = get_logger("spark_utils")
 

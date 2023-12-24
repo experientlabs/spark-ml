@@ -7,8 +7,8 @@ Main function is not tested
 """
 import datetime
 
-from src.app.main import partition_folder_path
-from src.config_utils.app_config_reader import read_config
+from etl.app.main import partition_folder_path
+from etl.config_utils.app_config_reader import read_config
 
 
 def test_partition_folder_path():

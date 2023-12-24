@@ -5,8 +5,8 @@ This file contains the testing of 'dateframe_processor'
 
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DoubleType
 
-from src.app.dataframe_processor import calculate_bmi, get_bmi_category, get_record_count
-from src.app_utils.spark_utils import get_spark_session
+from etl.app.dataframe_processor import calculate_bmi, get_bmi_category, get_record_count
+from etl.app_utils.spark_utils import get_spark_session
 from tests.app_utils.test_utils import get_spark_df, compare_data_frames
 
 

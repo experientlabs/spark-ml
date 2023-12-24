@@ -7,7 +7,7 @@ categorize BMI and health risk based on the BMI value from the dataframe.
 
 import pyspark.sql.functions as F
 
-from src.app_utils.logging_utils import get_logger
+from etl.app_utils.logging_utils import get_logger
 
 logger = get_logger("dataframe_processor")
 

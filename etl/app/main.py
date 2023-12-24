@@ -13,10 +13,10 @@ This file contains the logic to process the following steps:
 import datetime
 import sys
 
-from src.app.dataframe_processor import calculate_bmi, get_bmi_category, get_record_count
-from src.app_utils.logging_utils import get_logger
-from src.app_utils.spark_utils import get_spark_session, read_input_json_data, write_csv_output
-from src.config_utils.app_config_reader import read_config
+from etl.app.dataframe_processor import calculate_bmi, get_bmi_category, get_record_count
+from etl.app_utils.logging_utils import get_logger
+from etl.app_utils.spark_utils import get_spark_session, read_input_json_data, write_csv_output
+from etl.config_utils.app_config_reader import read_config
 
 logger = get_logger("main")
 

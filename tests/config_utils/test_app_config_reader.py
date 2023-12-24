@@ -2,7 +2,7 @@
 Test the config reader function
 """
 
-from src.config_utils.app_config_reader import read_config
+from etl.config_utils.app_config_reader import read_config
 
 
 def test_read_config():
