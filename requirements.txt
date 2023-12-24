@@ -1,1 +1,4 @@
-
+pyspark==3.2.4
+spark-nlp==5.2.0
+sparknlp==1.0.0
+setuptools~=65.5.1
