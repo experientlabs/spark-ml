@@ -8,16 +8,11 @@ Functions:
 """
 
 import sys
-
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StringType, StructField, IntegerType
 
-from etl.app_utils.logging_utils import get_logger
 
-logger = get_logger("spark_utils")
-
-
-def get_spark_session(app_name):
+def get_spark_session(app_name, logger):
     """
     Create and returns spark session
     :param logger: logger object
@@ -33,21 +28,23 @@ def get_spark_session(app_name):
         sys.exit(400)
 
 
-def read_input_json_data(spark, file_path):
+def read_text_data_to_spark_df(spark, file_path, logger):
     """
-    This function reads the json file from the file path and returns the data frame
-    :param spark: Spark session
-    :param file_path: input file path where the data is available
-    :return: dataframe from the input JSON file
+    Read text data from a CSV file into a Spark DataFrame.
+    Parameters:
+    - file_path: str, path to the CSV file.
+    Returns:
+    - df: pyspark.sql.DataFrame, Spark DataFrame containing the text data.
     """
-    schema = StructType([StructField("Gender", StringType(), True),
-                         StructField("HeightCm", IntegerType(), True),
-                         StructField("WeightKg", IntegerType(), True)])
-    input_file = spark.read.option("multiLine", "true").schema(schema).json(file_path)
-    return input_file.persist()
+    # Define schema (adjust data types as needed)
+    schema = "text STRING, label INT"
+    # Read CSV into Spark DataFrame
+    logger.info(" Reading csv file")
+    df = spark.read.csv(file_path, header=True, schema=schema)
+    return df
 
 
-def write_csv_output(file_path, df):
+def write_csv_output(file_path, df, logger):
     """
     This function writes the dataframe to the output location in csv format
     :param logger: logger object

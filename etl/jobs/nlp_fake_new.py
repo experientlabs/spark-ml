@@ -4,6 +4,10 @@ from pyspark.sql.types import StringType
 from sparknlp.annotator import *
 from sparknlp.base import *
 
+from etl.app_utils.spark_utils import read_text_data_to_spark_df
+from etl.logging_utils.logging_util import setup_logger
+
+
 
 def start_spark_nlp():
     # Start Spark Session
@@ -64,4 +68,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    logger = setup_logger()
+    path = '/home/sanjeet/Desktop/git_pod_el/spark-ml/resources/input/train.csv'
+    read_text_data_to_spark_df(start_spark_nlp(), path, logger)
