@@ -8,7 +8,8 @@ Functions:
 """
 
 import sys
-from pyspark.sql import SparkSession
+import pandas as pd
+from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.types import StructType, StringType, StructField, IntegerType
 
 
@@ -37,11 +38,22 @@ def read_text_data_to_spark_df(spark, file_path, logger):
     - df: pyspark.sql.DataFrame, Spark DataFrame containing the text data.
     """
     # Define schema (adjust data types as needed)
-    schema = "text STRING, label INT"
+    schema = "text STRING, label STRING"
     # Read CSV into Spark DataFrame
     logger.info(" Reading csv file")
-    df = spark.read.csv(file_path, header=True, schema=schema)
+    df = spark.read.option("delimiter", ";").csv(file_path, header=True)
     return df
+
+
+def read_data(path: str, spark: SparkSession) -> DataFrame:
+    schema = StructType(
+        [StructField('title', StringType(), True),
+         StructField('text', StringType(), True),
+         StructField('subject', StringType(), True),
+         StructField('date', StringType(), True)])
+    pd_df = pd.read_csv(path)
+    sp_df = spark.createDataFrame(pd_df, schema=schema)
+    return sp_df
 
 
 def write_csv_output(file_path, df, logger):

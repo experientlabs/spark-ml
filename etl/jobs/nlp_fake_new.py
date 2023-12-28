@@ -1,73 +1,82 @@
-import pyspark.sql.functions as F
-import sparknlp
-from pyspark.sql.types import StringType
-from sparknlp.annotator import *
-from sparknlp.base import *
+import pandas as pd
+from pyspark import SparkContext
+from pyspark.sql import SparkSession, SQLContext
+from pyspark.ml.feature import (
+    RegexTokenizer, StopWordsRemover, CountVectorizer, IDF,
+    StringIndexer, VectorAssembler
+)
+from pyspark.ml import Pipeline
+from pyspark.ml.pipeline import PipelineModel
 
-from etl.app_utils.spark_utils import read_text_data_to_spark_df
+from etl.app_utils.spark_utils import read_text_data_to_spark_df, get_spark_session
 from etl.logging_utils.logging_util import setup_logger
 
 
-
-def start_spark_nlp():
-    # Start Spark Session
-    spark = sparknlp.start()
-    print("Spark NLP Version :", sparknlp.version())
-    return spark
+def tokenize_text(input_col, output_col, pattern='\\W', to_lowercase=True):
+    return RegexTokenizer(inputCol=input_col, outputCol=output_col, pattern=pattern, toLowercase=to_lowercase)
 
 
-def create_spark_nlp_pipeline(model_name='classifierdl_use_fakenews'):
-    documentAssembler = DocumentAssembler() \
-        .setInputCol("text") \
-        .setOutputCol("document")
-
-    use = UniversalSentenceEncoder.pretrained(lang="en") \
-        .setInputCols(["document"]) \
-        .setOutputCol("sentence_embeddings")
-
-    document_classifier = ClassifierDLModel.pretrained(model_name) \
-        .setInputCols(['sentence_embeddings']) \
-        .setOutputCol("class_")
-
-    nlp_pipeline = Pipeline(
-        stages=[
-            documentAssembler,
-            use,
-            document_classifier
-        ])
-
-    return nlp_pipeline
+def remove_stop_words(input_col, output_col):
+    return StopWordsRemover(inputCol=input_col, outputCol=output_col)
 
 
-def run_spark_nlp_pipeline(spark, pipeline, text_list):
-    df = spark.createDataFrame(text_list, StringType()).toDF("text")
-    result = pipeline.fit(df).transform(df)
-    return result
+def compute_tf(input_col, output_col):
+    return CountVectorizer(inputCol=input_col, outputCol=output_col)
 
 
-def visualize_results(result):
-    result.select(F.explode(F.arrays_zip(result.class_.result,
-                                         result.document.result)).alias("cols")) \
-        .select(F.expr("cols['0']").alias("class"),
-                F.expr("cols['1']").alias("document")).show(truncate=False)
+def compute_tfidf(input_col, output_col):
+    return IDF(inputCol=input_col, outputCol=output_col)
 
 
-def main():
-    # Step 1: Start Spark NLP
-    spark = start_spark_nlp()
+def index_string(input_col, output_col):
+    return StringIndexer(inputCol=input_col, outputCol=output_col)
 
-    # Step 2: Create Spark NLP Pipeline
-    nlp_pipeline = create_spark_nlp_pipeline()
 
-    # Step 3: Run Spark NLP Pipeline
-    text_list = ["Your sample text 1", "Your sample text 2", "Your sample text 3"]
-    result = run_spark_nlp_pipeline(spark, nlp_pipeline, text_list)
+def assemble_features(input_cols, output_col):
+    return VectorAssembler(inputCols=input_cols, outputCol=output_col)
 
-    # Step 4: Visualize Results
-    visualize_results(result)
+
+def build_feature_pipeline():
+    # Define stages for the pipeline
+    text_tokenizer = tokenize_text('text', 'text_words')
+    text_sw_remover = remove_stop_words('text_words', 'text_sw_removed')
+    text_count_vectorizer = compute_tf('text_sw_removed', 'tf_text')
+    text_tfidf = compute_tfidf('tf_text', 'tf_idf_text')
+
+    subject_str_indexer = index_string('subject', 'subject_idx')
+
+    vec_assembler = assemble_features(['tf_idf_title', 'tf_idf_text', 'subject_idx'], 'features')
+
+    # Create a pipeline
+    pipeline = Pipeline(stages=[
+        text_tokenizer, text_sw_remover, text_count_vectorizer, text_tfidf,
+        subject_str_indexer, vec_assembler
+    ])
+
+    return pipeline
 
 
 if __name__ == "__main__":
-    logger = setup_logger()
-    path = '/home/sanjeet/Desktop/git_pod_el/spark-ml/resources/input/train.csv'
-    read_text_data_to_spark_df(start_spark_nlp(), path, logger)
+    # Example usage
+    feature_pipeline = build_feature_pipeline()
+
+    # Fit the pipeline on your DataFrame
+    fitted_pipeline = feature_pipeline.fit(your_data_frame)
+
+    # Transform your DataFrame
+    transformed_data = fitted_pipeline.transform(your_data_frame)
+
+    # If you want to save the fitted pipeline for later use
+    fitted_pipeline.save("your_model_path")
+
+    # If you want to load the saved pipeline
+    loaded_pipeline = PipelineModel.load("your_model_path")
+
+
+# if __name__ == "__main__":
+#     logger = setup_logger()
+#     path = '/home/sanjeet/Desktop/git_pod_el/spark-ml/resources/input/train.csv'
+#     spark = get_spark_session("nlp_app", logger)
+#     df = read_text_data_to_spark_df(spark, path, logger)
+#     df.groupBy('label').count().show()
+#     df.show(10)

@@ -5,7 +5,7 @@ from logging.config import fileConfig
 from logging.handlers import RotatingFileHandler
 
 
-def setup_logger(config_file='log_config.ini'):
+def setup_logger(config_file='/home/sanjeet/Desktop/git_pod_el/spark-ml/etl/logging_utils/log_config.ini'):
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     log_filename = f"app_{timestamp}.log"
     logging.config.fileConfig(config_file, defaults={'log_filename': log_filename})
